@@ -18,6 +18,8 @@ export const houseHoldsRouter = createTRPCRouter({
         const ids = homes.map(home => home.houseHoldId);
         let households = await ctx.prisma.household.findMany();
         return households.filter(house => ids.includes(house.id))
+    }).catch(err => {
+        console.error(err);
     });
 
     return householdsByUserId;
@@ -38,6 +40,8 @@ export const houseHoldsRouter = createTRPCRouter({
             }
         })
         return member;
+    }).catch(err => {
+        console.error(err);
     });
     return household;
   }),

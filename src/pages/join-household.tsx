@@ -18,7 +18,7 @@ const JoinHousehold: NextPage = () => {
     const onSubmit = (formData: JoinHouseholdForm) => {
         console.log(formData)
 
-        const fullName = user?.firstName + ' ' + (user?.lastName || '');
+        const fullName = (user?.firstName || '') + ' ' + (user?.lastName || '');
 
         joinHousehold.mutateAsync({
             code: formData.code,

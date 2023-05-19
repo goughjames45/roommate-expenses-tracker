@@ -18,7 +18,7 @@ const CreateHousehold: NextPage = () => {
     const onSubmit = (formData: CreateHouseholdForm) => {
         console.log(formData)
 
-        const fullName = user?.firstName + ' ' + (user?.lastName || '');
+        const fullName = (user?.firstName || '') + ' ' + (user?.lastName || '');
 
         createHousehold.mutateAsync({
             ...formData,
