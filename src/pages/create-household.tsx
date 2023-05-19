@@ -15,12 +15,12 @@ const CreateHousehold: NextPage = () => {
     const {user} = useUser();
 
     const { register, handleSubmit, watch, formState: { errors } } = useForm<CreateHouseholdForm>();
-    const onSubmit = (formData: CreateHouseholdForm) => {
+    const onSubmit = async (formData: CreateHouseholdForm) => {
         console.log(formData)
 
         const fullName = (user?.firstName || '') + ' ' + (user?.lastName || '');
 
-        createHousehold.mutateAsync({
+        await createHousehold.mutateAsync({
             ...formData,
             memberName: fullName
         }).catch(err => {
