@@ -23,6 +23,8 @@ const CreateHousehold: NextPage = () => {
         createHousehold.mutateAsync({
             ...formData,
             memberName: fullName
+        }).catch(err => {
+            console.error(err);
         })
     };
 
