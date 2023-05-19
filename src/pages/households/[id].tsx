@@ -13,7 +13,7 @@ const HouseholdView: NextPage = () => {
 
   const transactions = api.transactions.getTransactionByHousehold.useQuery({id: router.query.id as string}, {enabled: !!router.query.id});
 
-  const id = (router.query.id || '');
+  const id = String(router.query.id || '');
 
 
   return (
