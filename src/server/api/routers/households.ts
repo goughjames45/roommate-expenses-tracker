@@ -43,7 +43,6 @@ export const houseHoldsRouter = createTRPCRouter({
     }).catch(err => {
         console.error(err);
     });
-    return household;
   }),
 
   getHouseholdMembers: protectedProcedure.input(z.object({ householdId: z.string() })).query(async ({ input, ctx }) => {
