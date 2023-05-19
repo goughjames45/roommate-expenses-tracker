@@ -32,7 +32,9 @@ const CreateTransaction: NextPage = () => {
             amount: Number(formData.amount),
             description: formData.description,
             payerName: formData.spender
-        })
+        }).catch(err => {
+            console.error(err);
+        });
         
     };
 

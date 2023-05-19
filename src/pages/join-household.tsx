@@ -23,7 +23,9 @@ const JoinHousehold: NextPage = () => {
         joinHousehold.mutateAsync({
             code: formData.code,
             memberName: fullName,
-        })
+        }).catch(err => {
+            console.error(err);
+        });
     };
 
 
