@@ -16,7 +16,7 @@ export const houseHoldsRouter = createTRPCRouter({
         }
     }).then(async homes => {
         const ids = homes.map(home => home.houseHoldId);
-        let households = await ctx.prisma.household.findMany();
+        const households = await ctx.prisma.household.findMany();
         return households.filter(house => ids.includes(house.id))
     }).catch(err => {
         console.error(err);
@@ -43,7 +43,7 @@ export const houseHoldsRouter = createTRPCRouter({
     }).catch(err => {
         console.error(err);
     });
-    return await household;
+    return household;
   }),
 
   getHouseholdMembers: protectedProcedure.input(z.object({ householdId: z.string() })).query(async ({ input, ctx }) => {
