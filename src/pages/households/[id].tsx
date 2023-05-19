@@ -13,6 +13,8 @@ const HouseholdView: NextPage = () => {
 
   const transactions = api.transactions.getTransactionByHousehold.useQuery({id: router.query.id as string}, {enabled: !!router.query.id});
 
+  const id = (router.query.id || '');
+
 
   return (
     <>
@@ -25,7 +27,7 @@ const HouseholdView: NextPage = () => {
       <main className="flex min-h-screen flex-col items-center bg-gray-800 pt-24">
         <h1 className="text-4xl pb-12">Household Expenses</h1>
         <span className="pb-12">code: {router.query.id}</span>
-        <Link href={`/households/${router.query.id}/create-transaction`} className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        <Link href={`/households/${id}/create-transaction`} className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
             Add New Expense
         </Link>
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
