@@ -21,13 +21,16 @@ model Household {
 model Transaction {
     id        String   @id @default(cuid())
     createdAt DateTime @default(now())
-
     payerId String
     houseHoldId String
+    name String
+    amount Float
+    description String
 }
 
 model HouseholdMember {
     id        String   @id @default(cuid())
     houseHoldId String
     userId String
+    name String
 }

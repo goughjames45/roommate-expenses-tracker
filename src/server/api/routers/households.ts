@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/nextjs";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
@@ -7,24 +8,45 @@ export const houseHoldsRouter = createTRPCRouter({
     return ctx.prisma.household.findMany();
   }),
 
-  getHouseholdsByUser: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.household.findMany();
+  //Might need to rework this...
+  getHouseholdsByUser: publicProcedure.query(async ({ ctx }) => {
+    const householdsByUserId = await ctx.prisma.householdMember.findMany({
+        where: {
+            userId: ctx.auth.userId!
+        }
+    }).then(async homes => {
+        const ids = homes.map(home => home.houseHoldId);
+        let households = await ctx.prisma.household.findMany();
+        return households.filter(house => ids.includes(house.id))
+    });
+
+    return householdsByUserId;
   }),
 
-  createHousehold: protectedProcedure.input(z.object({ name: z.string() })).mutation(async ({ input, ctx }) => {
+  createHousehold: protectedProcedure.input(z.object({ name: z.string(), memberName: z.string() })).mutation(async ({ input, ctx }) => {
     const household = await ctx.prisma.household.create({
         data: {
-            ...input
+            name: input.name
         }
     }).then(async house => {
+
         const member = await ctx.prisma.householdMember.create({
             data: {
                 houseHoldId: house.id,
-                userId: ctx.auth.userId
+                userId: ctx.auth.userId,
+                name: input.memberName
             }
         })
         return member;
     });
     return household;
+  }),
+
+  getHouseholdMembers: protectedProcedure.input(z.object({ householdId: z.string() })).query(async ({ input, ctx }) => {
+    return ctx.prisma.householdMember.findMany({
+        where: {
+            houseHoldId: input.householdId
+        }
+    });
   }),
 });

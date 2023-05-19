@@ -1,16 +1,27 @@
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 
 export const transactionsRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
-    }),
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.transaction.findMany();
+  getTransactionByHousehold: publicProcedure.input(z.object({ id: z.string() })).query(({ input, ctx }) => {
+    
+    return ctx.prisma.transaction.findMany({
+        where: {
+            houseHoldId: input.id
+        }
+    });
+  }),
+
+  createTransaction: protectedProcedure.input(z.object({ payerId: z.string(), houseHoldId: z.string(), name: z.string(), amount: z.number(), description: z.string() })).mutation(async ({ input, ctx }) => {
+    const transaction = await ctx.prisma.transaction.create({
+        data: {
+            payerId: input.payerId,
+            houseHoldId: input.houseHoldId,
+            name: input.name,
+            amount: input.amount,
+            description: input.description
+        }
+    });
+    return transaction;
   }),
 });

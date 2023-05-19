@@ -12,16 +12,21 @@ type CreateHouseholdForm = {
 const CreateHousehold: NextPage = () => {
 
     const createHousehold = api.households.createHousehold.useMutation();
+    const {user} = useUser();
 
     const { register, handleSubmit, watch, formState: { errors } } = useForm<CreateHouseholdForm>();
     const onSubmit = (formData: CreateHouseholdForm) => {
         console.log(formData)
+
+        const fullName = user?.firstName + ' ' + (user?.lastName || '');
+
         createHousehold.mutateAsync({
             ...formData,
+            memberName: fullName
         })
     };
 
-    const user = useUser();
+
 
     //const { data } = api.example.getAll.useQuery();
 
