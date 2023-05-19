@@ -24,10 +24,54 @@ const HouseholdView: NextPage = () => {
 
       <main className="flex min-h-screen flex-col items-center bg-gray-800 pt-24">
         <h1 className="text-4xl pb-12">Household Expenses</h1>
+        <span className="pb-12">code: {router.query.id}</span>
         <Link href={`/households/${router.query.id}/create-transaction`} className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
             Add New Expense
         </Link>
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
+
+            
+            <div className="relative overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" className="px-6 py-3">
+                                Transaction Date
+                            </th>
+                            <th scope="col" className="px-6 py-3">
+                                Spender
+                            </th>
+                            <th scope="col" className="px-6 py-3">
+                                Name
+                            </th>
+                            <th scope="col" className="px-6 py-3">
+                                Amount
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {transactions?.data?.map((transaction) =>
+                            <tr key={transaction.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    {transaction.createdAt.getDate()}
+                                </th>
+                                <td className="px-6 py-4">
+                                    {transaction.payerName}
+                                </td>
+                                <td className="px-6 py-4">
+                                    {transaction.name}
+                                </td>
+                                <td className="px-6 py-4">
+                                    {transaction.amount}
+                                </td>
+                            </tr>
+                        )}
+                        
+                    </tbody>
+                </table>
+            </div>
+
        
         </div>
       </main>

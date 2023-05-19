@@ -25,15 +25,13 @@ const CreateTransaction: NextPage = () => {
     const onSubmit = (formData: CreateExpenseForm) => {
         const member = householdMembers.data?.find(member => member.name === formData.spender);
 
-        console.log(formData);
-        console.log(member)
-
         createTransaction.mutateAsync({
             payerId: member?.userId as string,
             houseHoldId: router.query.id as string,
             name: formData.name,
             amount: Number(formData.amount),
-            description: formData.description
+            description: formData.description,
+            payerName: formData.spender
         })
         
     };

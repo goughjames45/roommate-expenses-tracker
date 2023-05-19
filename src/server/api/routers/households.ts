@@ -49,4 +49,17 @@ export const houseHoldsRouter = createTRPCRouter({
         }
     });
   }),
+
+  joinHousehold: protectedProcedure.input(z.object({ code: z.string(), memberName: z.string() })).mutation(async ({ input, ctx }) => {
+    
+    const member = await ctx.prisma.householdMember.create({
+        data: {
+            houseHoldId: input.code,
+            userId: ctx.auth.userId,
+            name: input.memberName
+        }
+    });
+    return member;
+ 
+  }),
 });

@@ -12,14 +12,15 @@ export const transactionsRouter = createTRPCRouter({
     });
   }),
 
-  createTransaction: protectedProcedure.input(z.object({ payerId: z.string(), houseHoldId: z.string(), name: z.string(), amount: z.number(), description: z.string() })).mutation(async ({ input, ctx }) => {
+  createTransaction: protectedProcedure.input(z.object({ payerId: z.string(), houseHoldId: z.string(), name: z.string(), amount: z.number(), description: z.string(), payerName: z.string() })).mutation(async ({ input, ctx }) => {
     const transaction = await ctx.prisma.transaction.create({
         data: {
             payerId: input.payerId,
             houseHoldId: input.houseHoldId,
             name: input.name,
             amount: input.amount,
-            description: input.description
+            description: input.description,
+            payerName: input.payerName
         }
     });
     return transaction;
