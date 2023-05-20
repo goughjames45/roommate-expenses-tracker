@@ -25,7 +25,7 @@ const HouseholdView: NextPage = () => {
 
   const [showModal, setShowModal] = useState(false);
 
-  let [data, setData] = useState({
+  const [data, setData] = useState({
     transactionId: ''
   })
 
@@ -40,7 +40,9 @@ const HouseholdView: NextPage = () => {
 
   const handleConfirm = () => {
     deleteTransaction.mutate(data);
-    transactions.refetch();
+    transactions.refetch().catch(err => {
+        console.error(err);
+    });
   }
 
   const openModal = (rowData: TransactionRowData) => {
