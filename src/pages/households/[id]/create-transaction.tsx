@@ -35,7 +35,7 @@ const CreateTransaction: NextPage = () => {
         }).catch(err => {
             console.error(err);
         });
-        
+        router.back();
     };
 
 

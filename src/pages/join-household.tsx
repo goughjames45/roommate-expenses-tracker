@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import Head from "next/head";
 
 import { api } from "~/utils/api";
+import router from "next/router";
 
 type JoinHouseholdForm = {
     code: string;
@@ -26,11 +27,10 @@ const JoinHousehold: NextPage = () => {
         }).catch(err => {
             console.error(err);
         });
+        router.back();
     };
 
 
-
-    //const { data } = api.example.getAll.useQuery();
 
     return (
         <>
