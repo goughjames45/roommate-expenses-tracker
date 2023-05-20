@@ -25,4 +25,13 @@ export const transactionsRouter = createTRPCRouter({
     });
     return transaction;
   }),
+
+  deleteTransaction: protectedProcedure.input(z.object({ transactionId: z.string() })).mutation(({ input, ctx }) => {
+    const transaction = ctx.prisma.transaction.delete({
+        where: {
+            id: input.transactionId
+        }  
+    });
+    return transaction;
+  }),
 });
