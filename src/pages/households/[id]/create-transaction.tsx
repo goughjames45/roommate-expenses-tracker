@@ -21,10 +21,10 @@ const CreateTransaction: NextPage = () => {
     const householdMembers = api.households.getHouseholdMembers.useQuery({householdId: router.query.id as string}, {enabled: !!router.query.id});
 
     const { register, handleSubmit } = useForm<CreateExpenseForm>();
-    const onSubmit = (formData: CreateExpenseForm) => {
+    const onSubmit = async (formData: CreateExpenseForm) => {
         const member = householdMembers.data?.find(member => member.name === formData.spender);
 
-        createTransaction.mutateAsync({
+        await createTransaction.mutateAsync({
             payerId: member?.userId as string,
             houseHoldId: router.query.id as string,
             name: formData.name,

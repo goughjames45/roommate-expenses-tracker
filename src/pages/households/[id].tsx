@@ -25,24 +25,45 @@ const HouseholdView: NextPage = () => {
 
   const router = useRouter();
 
-  const transactions = api.transactions.getTransactionByHousehold.useQuery({id: router.query.id as string}, {enabled: !!router.query.id});
+  const outstandingTransactions = api.transactions.getOutstandingTransactionsByHousehold.useQuery({id: router.query.id as string}, {enabled: !!router.query.id});
 
-  const deleteTransaction = api.transactions.deleteTransaction.useMutation();
+  const paidTransactions = api.transactions.getTransactionByHousehold.useQuery({id: router.query.id as string}, {enabled: !!router.query.id});
 
+  const deleteTransaction = api.transactions.deleteTransaction.useMutation({
+    async onSuccess() {
+        await paidTransactions.refetch();
+        await outstandingTransactions.refetch();
+    }
+  });
+
+  const payExpense = api.transactions.payExpense.useMutation({
+    async onSuccess() {
+        await outstandingTransactions.refetch();
+    }
+  });
+  
   const id = String(router.query.id || '');
 
-
+  
   const handleConfirm = () => {
     deleteTransaction.mutate(data);
-    transactions.refetch().catch(err => {
-        console.error(err);
-    });
   }
 
   const openModal = (rowData: TransactionRowData) => {
     setData({transactionId: rowData.id});
     setShowModal(true);
   };
+
+  const markPaid = async (rowData: TransactionRowData) => {
+    await payExpense.mutateAsync({ transactionId: rowData.id });
+    amountOwed = calculateAmountOwed();
+  };
+
+  const calculateAmountOwed = () => {
+    return outstandingTransactions?.data?.map(t => t.amount).reduce((partialSum, a) => partialSum + a, 0) || 0;
+  }
+
+  let amountOwed = calculateAmountOwed();
 
   return (
     <>
@@ -58,9 +79,9 @@ const HouseholdView: NextPage = () => {
         <Link href={`/households/${id}/create-transaction`} className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
             Add New Expense
         </Link>
-        <div className="flex justify-center overflow-x-auto gap-12 px-4 py-16 w-full">
 
-            
+        <h2 className="text-3xl pt-20">Outstanding Expenses</h2>
+        <div className="flex justify-center overflow-x-auto gap-12 px-4 py-16 w-full">
             <div className="relative w-full">
                 <table className="w-full text-sm text-left text-gray-400">
                     <thead className="text-xs uppercase bg-gray-700 text-gray-400">
@@ -84,7 +105,61 @@ const HouseholdView: NextPage = () => {
                     </thead>
                     <tbody>
 
-                        {transactions?.data?.map((transaction) =>
+                        {outstandingTransactions?.data?.map((transaction) =>
+                            <tr key={transaction.id} className="border-b bg-gray-800 border-gray-700">
+                                <th scope="row" className="px-6 py-4 font-medium whitespace-nowrap text-white">
+                                    {transaction.createdAt.toDateString()}
+                                </th>
+                                <td className="px-6 py-4">
+                                    {transaction.payerName}
+                                </td>
+                                <td className="px-6 py-4">
+                                    {transaction.name}
+                                </td>
+                                <td className="px-6 py-4">
+                                    {transaction.amount}
+                                </td>
+                                <td className="flex items-center px-6 py-4 space-x-3">
+                                    <button onClick={() => markPaid(transaction)} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Mark as paid</button>
+                                    <button onClick={() => { openModal(transaction); }} className="font-medium text-red-500 hover:underline">Remove</button>
+                                </td>
+                            </tr>
+                        )}
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div>
+            <span>Total amount owed: ${amountOwed}</span>
+        </div>
+
+        <h2 className="text-3xl pt-20">Previous Expenses</h2>
+        <div className="flex justify-center overflow-x-auto gap-12 px-4 py-16 w-full">
+            <div className="relative w-full">
+                <table className="w-full text-sm text-left text-gray-400">
+                    <thead className="text-xs uppercase bg-gray-700 text-gray-400">
+                        <tr>
+                            <th scope="col" className="px-6 py-3">
+                                Transaction Date
+                            </th>
+                            <th scope="col" className="px-6 py-3">
+                                Spender
+                            </th>
+                            <th scope="col" className="px-6 py-3">
+                                Name
+                            </th>
+                            <th scope="col" className="px-6 py-3">
+                                Amount
+                            </th>
+                            <th scope="col" className="px-6 py-3">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {paidTransactions?.data?.map((transaction) =>
                             <tr key={transaction.id} className="border-b bg-gray-800 border-gray-700">
                                 <th scope="row" className="px-6 py-4 font-medium whitespace-nowrap text-white">
                                     {transaction.createdAt.toDateString()}

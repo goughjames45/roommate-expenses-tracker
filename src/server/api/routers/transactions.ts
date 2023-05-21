@@ -12,6 +12,32 @@ export const transactionsRouter = createTRPCRouter({
     });
   }),
 
+  getOutstandingTransactionsByHousehold: publicProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
+    
+    const householdTransactions = await ctx.prisma.transaction.findMany({
+        where: {
+            houseHoldId: input.id
+        }
+    });
+
+    if(ctx.auth.userId === null) {
+      console.log("user id null")
+      return;
+    }
+
+    const paidTransactions = (await ctx.prisma.payments.findMany({
+      where: {
+        userId: ctx.auth.userId
+      },
+      select: {
+        transactionId: true
+      }
+    })).map(t => t.transactionId);
+
+
+    return householdTransactions.filter(t => !paidTransactions.includes(t.id));
+  }),
+
   createTransaction: protectedProcedure.input(z.object({ payerId: z.string(), houseHoldId: z.string(), name: z.string(), amount: z.number(), description: z.string(), payerName: z.string() })).mutation(async ({ input, ctx }) => {
     const transaction = await ctx.prisma.transaction.create({
         data: {
@@ -23,6 +49,17 @@ export const transactionsRouter = createTRPCRouter({
             payerName: input.payerName
         }
     });
+
+    //if the user is the same person who paid, then create a payment, so that it does not show up as outstanding expense
+    if(ctx.auth.userId === input.payerId) {
+      await ctx.prisma.payments.create({
+        data: {
+          userId: ctx.auth.userId,
+          transactionId: transaction.id
+        }
+      });
+    }
+
     return transaction;
   }),
 
@@ -33,5 +70,15 @@ export const transactionsRouter = createTRPCRouter({
         }  
     });
     return transaction;
+  }),
+
+  payExpense: protectedProcedure.input(z.object({ transactionId: z.string() })).mutation(async ({ input, ctx }) => {
+    const payment = await ctx.prisma.payments.create({
+        data: {
+          userId: ctx.auth.userId,
+          transactionId: input.transactionId
+        }
+    });
+    return payment;
   }),
 });
