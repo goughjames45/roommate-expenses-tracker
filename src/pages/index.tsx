@@ -1,9 +1,8 @@
 import { useUser } from "@clerk/nextjs";
-import { Household } from "@prisma/client";
+import { type Household } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import Script from "next/script";
 
 import { api } from "~/utils/api";
 

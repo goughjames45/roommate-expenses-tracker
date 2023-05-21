@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import { useForm } from "react-hook-form";
 import Head from "next/head";
@@ -21,7 +20,7 @@ const CreateTransaction: NextPage = () => {
 
     const householdMembers = api.households.getHouseholdMembers.useQuery({householdId: router.query.id as string}, {enabled: !!router.query.id});
 
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<CreateExpenseForm>();
+    const { register, handleSubmit } = useForm<CreateExpenseForm>();
     const onSubmit = (formData: CreateExpenseForm) => {
         const member = householdMembers.data?.find(member => member.name === formData.spender);
 

@@ -18,7 +18,6 @@ import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 
 import { prisma } from "~/server/db";
 
-type CreateContextOptions = Record<string, never>;
 
 interface AuthContext {
   auth: SignedInAuthObject | SignedOutAuthObject;
@@ -63,7 +62,7 @@ export const createTRPCContext = (_opts: CreateNextContextOptions) => {
 import { TRPCError, initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { SignedInAuthObject, SignedOutAuthObject, getAuth } from "@clerk/nextjs/dist/server";
+import { type SignedInAuthObject, type SignedOutAuthObject, getAuth } from "@clerk/nextjs/dist/server";
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,

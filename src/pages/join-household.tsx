@@ -15,7 +15,7 @@ const JoinHousehold: NextPage = () => {
     const joinHousehold = api.households.joinHousehold.useMutation();
     const {user} = useUser();
 
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<JoinHouseholdForm>();
+    const { register, handleSubmit } = useForm<JoinHouseholdForm>();
     const onSubmit = (formData: JoinHouseholdForm) => {
         console.log(formData)
 

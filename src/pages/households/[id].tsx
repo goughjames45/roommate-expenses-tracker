@@ -1,5 +1,3 @@
-import { useUser } from "@clerk/nextjs";
-import { Household } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -15,10 +13,6 @@ type TransactionRowData = {
     name: string;
     amount: number;
     description: string;
-}
-
-type deleteData = {
-    transactionId: string;
 }
 
 const HouseholdView: NextPage = () => {

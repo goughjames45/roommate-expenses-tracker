@@ -15,19 +15,26 @@ const CreateHousehold: NextPage = () => {
     const createHousehold = api.households.createHousehold.useMutation();
     const {user} = useUser();
 
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<CreateHouseholdForm>();
+    const { register, handleSubmit } = useForm<CreateHouseholdForm>();
 
-    const onSubmit = async (formData: CreateHouseholdForm) => {
+    const createHouse = async (data: { name: string; memberName: string; }) => {
+        await createHousehold.mutateAsync(data).catch(err => {
+            console.error(err);
+        });
+    }
+
+    const onSubmit = (formData: CreateHouseholdForm): void => {
         console.log(formData)
 
         const fullName = (user?.firstName || '') + ' ' + (user?.lastName || '');
 
-        await createHousehold.mutateAsync({
+        const data = {
             ...formData,
             memberName: fullName
-        }).catch(err => {
-            console.error(err);
-        });
+        };
+
+        createHouse(data).catch(err => console.log(err));
+        
         router.back();
     };
 

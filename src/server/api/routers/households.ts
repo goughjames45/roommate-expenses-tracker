@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/nextjs";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
@@ -10,17 +9,18 @@ export const houseHoldsRouter = createTRPCRouter({
 
   //Might need to rework this...
   getHouseholdsByUser: publicProcedure.query(async ({ ctx }) => {
-    const householdsByUserId = await ctx.prisma.householdMember.findMany({
+    if(ctx.auth.userId === null) {
+        return;
+    }
+
+    const householdMembers = await ctx.prisma.householdMember.findMany({
         where: {
-            userId: ctx.auth.userId!
+            userId: ctx.auth.userId
         }
-    }).then(async homes => {
-        const ids = homes.map(home => home.houseHoldId);
-        const households = await ctx.prisma.household.findMany();
-        return households.filter(house => ids.includes(house.id))
-    }).catch(err => {
-        console.error(err);
     });
+    const households = await ctx.prisma.household.findMany();
+    const ids = householdMembers.map(home => home.houseHoldId);
+    const householdsByUserId = households.filter(house => ids.includes(house.id));
 
     return householdsByUserId;
   }),
@@ -30,19 +30,15 @@ export const houseHoldsRouter = createTRPCRouter({
         data: {
             name: input.name
         }
-    }).then(async house => {
-
-        const member = await ctx.prisma.householdMember.create({
-            data: {
-                houseHoldId: house.id,
-                userId: ctx.auth.userId,
-                name: input.memberName
-            }
-        })
-        return member;
-    }).catch(err => {
-        console.error(err);
     });
+    await ctx.prisma.householdMember.create({
+        data: {
+            houseHoldId: household.id,
+            userId: ctx.auth.userId,
+            name: input.memberName
+        }
+    });
+
     return household;
   }),
 
