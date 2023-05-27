@@ -55,7 +55,7 @@ const HouseholdView: NextPage = () => {
   };
 
   const markPaid = async (rowData: TransactionRowData) => {
-    await payExpense.mutateAsync({ transactionId: rowData.id });
+    await payExpense.mutateAsync({ paymentId: rowData.id });
     amountOwed = calculateAmountOwed();
   };
 
@@ -96,7 +96,7 @@ const HouseholdView: NextPage = () => {
                                 Name
                             </th>
                             <th scope="col" className="px-6 py-3">
-                                Amount
+                                Amount Owed
                             </th>
                             <th scope="col" className="px-6 py-3">
                                 Action
@@ -121,7 +121,6 @@ const HouseholdView: NextPage = () => {
                                 </td>
                                 <td className="flex items-center px-6 py-4 space-x-3">
                                     <button onClick={() => markPaid(transaction)} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Mark as paid</button>
-                                    <button onClick={() => { openModal(transaction); }} className="font-medium text-red-500 hover:underline">Remove</button>
                                 </td>
                             </tr>
                         )}

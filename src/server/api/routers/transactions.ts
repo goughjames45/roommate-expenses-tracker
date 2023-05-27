@@ -16,29 +16,74 @@ export const transactionsRouter = createTRPCRouter({
     
     const householdTransactions = await ctx.prisma.transaction.findMany({
         where: {
-            houseHoldId: input.id
+            houseHoldId: input.id,
+            
         }
     });
 
     if(ctx.auth.userId === null) {
-      console.log("user id null")
       return;
     }
 
-    const paidTransactions = (await ctx.prisma.payments.findMany({
+    const userHouseholdPayments = (await ctx.prisma.payments.findMany({
       where: {
-        userId: ctx.auth.userId
-      },
-      select: {
-        transactionId: true
+        userId: ctx.auth.userId,
+        isPaid: false
+        
       }
-    })).map(t => t.transactionId);
+    })).filter(t => householdTransactions.map(h => h.id).includes(t.transactionId));
 
 
-    return householdTransactions.filter(t => !paidTransactions.includes(t.id));
+    const householdTransactionPaymets: { id: string; createdAt: Date; userId: string; transactionId: string; amount: number; isPaid: boolean; payerName: string, payerId: string, name: string, description: string }[] = [];
+    
+    householdTransactions.forEach(transaction => {
+      const payments = userHouseholdPayments.filter(p => p.transactionId === transaction.id);
+      payments.forEach(p => {
+        householdTransactionPaymets.push({
+          id: p.id,
+          createdAt: p.createdAt,
+          userId: p.userId,
+          transactionId: p.transactionId,
+          amount: p.amount,
+          isPaid: p.isPaid,
+          payerName: transaction.payerName,
+          payerId: transaction.payerId,
+          name: transaction.name,
+          description: transaction.description
+        })
+      })
+    })
+
+
+    return householdTransactionPaymets;
   }),
 
   createTransaction: protectedProcedure.input(z.object({ payerId: z.string(), houseHoldId: z.string(), name: z.string(), amount: z.number(), description: z.string(), payerName: z.string() })).mutation(async ({ input, ctx }) => {
+    // const transaction = await ctx.prisma.transaction.create({
+    //     data: {
+    //         payerId: input.payerId,
+    //         houseHoldId: input.houseHoldId,
+    //         name: input.name,
+    //         amount: input.amount,
+    //         description: input.description,
+    //         payerName: input.payerName
+    //     }
+    // });
+
+    // //if the user is the same person who paid, then create a payment, so that it does not show up as outstanding expense
+    // if(ctx.auth.userId === input.payerId) {
+    //   await ctx.prisma.payments.create({
+    //     data: {
+    //       userId: ctx.auth.userId,
+    //       transactionId: transaction.id
+    //     }
+    //   });
+    // }
+
+    // return transaction;
+  }),
+
+  createHouseholdExpense: protectedProcedure.input(z.object({ payerId: z.string(), houseHoldId: z.string(), name: z.string(), amount: z.number(), description: z.string(), payerName: z.string(), members: z.map(z.string(), z.number()) })).mutation(async ({ input, ctx }) => {
     const transaction = await ctx.prisma.transaction.create({
         data: {
             payerId: input.payerId,
@@ -50,15 +95,16 @@ export const transactionsRouter = createTRPCRouter({
         }
     });
 
-    //if the user is the same person who paid, then create a payment, so that it does not show up as outstanding expense
-    if(ctx.auth.userId === input.payerId) {
-      await ctx.prisma.payments.create({
-        data: {
-          userId: ctx.auth.userId,
-          transactionId: transaction.id
-        }
-      });
-    }
+    const memberPayments = [...input.members].map(([userId, value]) => ({ 
+      userId,
+      amount: Number(value),
+      transactionId: transaction.id,
+      isPaid: input.payerId == userId ? true : false
+    }));
+
+    await ctx.prisma.payments.createMany(
+      {data: memberPayments}
+    )
 
     return transaction;
   }),
@@ -72,11 +118,13 @@ export const transactionsRouter = createTRPCRouter({
     return transaction;
   }),
 
-  payExpense: protectedProcedure.input(z.object({ transactionId: z.string() })).mutation(async ({ input, ctx }) => {
-    const payment = await ctx.prisma.payments.create({
+  payExpense: protectedProcedure.input(z.object({ paymentId: z.string() })).mutation(async ({ input, ctx }) => {
+    const payment = await ctx.prisma.payments.update({
+        where: {
+          id: input.paymentId,
+        },
         data: {
-          userId: ctx.auth.userId,
-          transactionId: input.transactionId
+          isPaid: true
         }
     });
     return payment;

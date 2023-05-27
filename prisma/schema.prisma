@@ -34,6 +34,8 @@ model Payments {
     createdAt DateTime @default(now())
     userId String 
     transactionId String
+    amount Float
+    isPaid Boolean
 }
 
 model HouseholdMember {

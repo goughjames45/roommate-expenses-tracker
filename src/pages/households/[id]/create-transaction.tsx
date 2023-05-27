@@ -4,17 +4,28 @@ import Head from "next/head";
 
 import { api } from "~/utils/api";
 import { useRouter } from "next/router";
+import { useState } from "react";
 
 type CreateExpenseForm = {
     name: string;
     description: string;
     amount: number;
     spender: string;
+
+    members: {
+        [memberId: string]: number
+    }
 }
 
 const CreateTransaction: NextPage = () => {
 
     const createTransaction = api.transactions.createTransaction.useMutation();
+
+    const createHouseholdExpense = api.transactions.createHouseholdExpense.useMutation();
+
+    const [stepOne, setStepOne] = useState(true);
+
+    const [expenseAmount, setExpenseAmount] = useState(0);
 
     const router = useRouter();
 
@@ -24,17 +35,41 @@ const CreateTransaction: NextPage = () => {
     const onSubmit = async (formData: CreateExpenseForm) => {
         const member = householdMembers.data?.find(member => member.name === formData.spender);
 
-        await createTransaction.mutateAsync({
+
+        const data = {
             payerId: member?.userId as string,
             houseHoldId: router.query.id as string,
             name: formData.name,
             amount: Number(formData.amount),
             description: formData.description,
-            payerName: formData.spender
+            payerName: formData.spender,
+            members: new Map(Object.entries(formData.members))
+        }
+
+        const memberMap = new Map<string, number>();
+
+        Object.keys(formData.members).forEach(key => {
+            memberMap.set(key, Number(formData.members[key]));
+        });
+
+        await createHouseholdExpense.mutateAsync({
+            payerId: member?.userId as string,
+            houseHoldId: router.query.id as string,
+            name: formData.name,
+            amount: Number(formData.amount),
+            description: formData.description,
+            payerName: formData.spender,
+            members: memberMap
         }).catch(err => {
             console.error(err);
         });
         router.back();
+
+    };
+
+    const onNextPage = (formData: CreateExpenseForm) => {
+        setStepOne(false);
+        setExpenseAmount(formData.amount);
     };
 
 
@@ -47,61 +82,95 @@ const CreateTransaction: NextPage = () => {
         </Head>
 
         <main className="flex min-h-screen flex-col items-center bg-gray-800">
-            <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
-                <h1 className="text-4xl pb-12">Add a new household expense</h1>
-                <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit(onSubmit)}>
-                    <div className="mb-6">
-                        <div className="mb-10">
-                            <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 text-white">Transaction Name</label>
-                            <input {...register("name", { required: true })} id="name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="" required/>
-                        </div>
-                       
-                        <div className="mb-10">
-                            <label
-                                htmlFor="description"
-                                className="mb-2 block text-sm font-medium text-white"
-                            >
-                                Description
-                            </label>
-                            <textarea
-                                id="description"
-                                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                                {...register("description", { required: true })}
-                            />
-                        </div>
-                        
-                        <div className="mb-10">
-                            <label
-                                htmlFor="amount"
-                                className="mb-2 block text-sm font-medium text-white"
-                            >
-                                Amount
-                            </label>
-                            <input
-                                id="amount"
-                                type="number"
-                                step="0.01"
 
-                                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                                {...register("amount", { required: true})}
-                            />
-                        </div>
-                        
 
-                        <label htmlFor="spender" className="block mb-2 text-sm font-medium text-gray-900 text-white">Spender</label>
-                        <select id="spender" {...register("spender", { required: true })} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                             {householdMembers?.data?.map((member) =>
-                                <option key={member.id}> {member.name} </option>
-                            )}
+            {stepOne && 
+                <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
+                    <h1 className="text-4xl pb-12">Add a new household expense</h1>
+                    <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit(onNextPage)}>
+                        <div className="mb-6">
+                            <div className="mb-10">
+                                <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 text-white">Transaction Name</label>
+                                <input {...register("name", { required: true })} id="name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="" required/>
+                            </div>
+                        
+                            <div className="mb-10">
+                                <label
+                                    htmlFor="description"
+                                    className="mb-2 block text-sm font-medium text-white"
+                                >
+                                    Description
+                                </label>
+                                <textarea
+                                    id="description"
+                                    className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+                                    {...register("description", { required: true })}
+                                />
+                            </div>
                             
-                        </select>
+                            <div className="mb-10">
+                                <label
+                                    htmlFor="amount"
+                                    className="mb-2 block text-sm font-medium text-white"
+                                >
+                                    Amount
+                                </label>
+                                <input
+                                    id="amount"
+                                    type="number"
+                                    step="0.01"
 
-                    </div>
-                    <button type="submit" className="w-1/3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Create</button>
+                                    className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+                                    {...register("amount", { required: true})}
+                                />
+                            </div>
+                            
 
-                  
-                </form>
-            </div>
+                            <label htmlFor="spender" className="block mb-2 text-sm font-medium text-gray-900 text-white">Spender</label>
+                            <select id="spender" {...register("spender", { required: true })} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                {householdMembers?.data?.map((member) =>
+                                    <option key={member.id}> {member.name} </option>
+                                )}
+                                
+                            </select>
+
+                        </div>
+                        <button type="submit" className="w-1/3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Next</button>
+
+                    
+                    </form>
+                </div>
+            }
+            
+
+            { !stepOne && 
+            
+                <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
+                    <h1 className="text-4xl pb-12">Split expense among household members</h1>
+                    <span>Expense: {expenseAmount}</span>
+                    <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit(onSubmit)}>
+                        <div className="mb-6">
+
+                            {householdMembers?.data?.map(member => 
+                                <div key={member.id} className="mb-10">
+                                    <label htmlFor={member.name} className="block mb-2 text-sm font-medium text-gray-900 text-white">{member.name}</label>
+                                    <input
+                                        id={member.name}
+                                        type="number"
+                                        step="0.01"
+                                        defaultValue={expenseAmount / householdMembers?.data?.length}
+                                        className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+                                        {...register(`members.${member.userId}`, { required: true })} />
+                                </div>
+                            )}
+
+                        </div>
+                        <button type="submit" className="w-1/3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Create</button>
+                    </form>
+                </div>
+            
+            }
+            
         </main>
         </>
     );
